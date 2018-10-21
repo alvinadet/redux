@@ -1,41 +1,57 @@
-import { createStore, combineReducers } from 'redux';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import logger from 'redux-logger';
+import thunk from 'redux-thunk';
+import Axios from 'axios';
 
 const reduxStore = () => {
+  //state
   const stateUser = {
-    name: 'Alvin'
+    users: 0
   };
+
+  //action
   const userName = (state = stateUser, action) => {
     switch (action.type) {
-      case 'CHANGE_NAME': {
-        state = { ...state, name: action.payload };
+      case 'FETCH_USERS_START': {
         break;
       }
-      case 'CHANGE_AGE': {
-        state = { ...state, age: action.payload };
-        break;
+      case 'RECEIVE_USERS': {
+        return { ...state, users: action.payload };
       }
-      default: {
-        return state;
+      case 'FETCH_USERS_ERROR': {
+        break;
       }
     }
     return state;
   };
 
+  //mengcombine reducer
   const reducer = combineReducers({
-    user: userName
+    userName
   });
 
-  const tweetsAction = () => {};
+  //memanagement state
+  const middleware = applyMiddleware(logger, thunk);
 
-  const store = createStore(reducer);
+  //create store
+  const store = createStore(reducer, middleware);
 
+  //pemanggilan action
+  store.dispatch(dispatch => {
+    dispatch({ type: 'FETCH_USERS_START' });
+    Axios.get('https://jsonplaceholder.typicode.com/users')
+      .then(res => {
+        dispatch({ type: 'RECEIVE_USERS', payload: res.data });
+      })
+      .catch(err => {
+        dispatch({ type: 'FETCH_USERS_ERROR', payload: err.data });
+      });
+  });
+
+  //component mana saja yag berlangganan
   store.subscribe(() => {
-    console.log('store change', store.getState());
+    console.log('store change', store.getState(stateUser));
   });
-
-  store.dispatch({ type: 'CHANGE_NAME', payload: 'ALVIN' });
-  store.dispatch({ type: 'CHANGE_AGE', payload: 18 });
-  store.dispatch({ type: 'CHANGE_NAME', payload: 'ADETYA' });
 };
 
 export default reduxStore;
