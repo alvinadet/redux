@@ -2,24 +2,33 @@ import { createStore, combineReducers, applyMiddleware } from 'redux';
 import logger from 'redux-logger';
 import thunk from 'redux-thunk';
 import Axios from 'axios';
+import promise from 'redux-promise-middleware';
 
 const reduxStore = () => {
   //state
   const stateUser = {
-    users: 0
+    fetching: false,
+    fetched: true,
+    users: [],
+    error: ''
   };
 
   //action
   const userName = (state = stateUser, action) => {
     switch (action.type) {
-      case 'FETCH_USERS_START': {
-        break;
+      case 'FETCH_USERS_PENDING': {
+        return { ...state, fetching: true };
       }
-      case 'RECEIVE_USERS': {
-        return { ...state, users: action.payload };
+      case 'FETCH_USERS_FULFILLED': {
+        return {
+          ...state,
+          users: action.payload,
+          fetching: false,
+          fetched: true
+        };
       }
-      case 'FETCH_USERS_ERROR': {
-        break;
+      case 'FETCH_USERS_REJECTED': {
+        return { ...state, fetching: false, error: action.payload };
       }
     }
     return state;
@@ -31,21 +40,15 @@ const reduxStore = () => {
   });
 
   //memanagement state
-  const middleware = applyMiddleware(logger, thunk);
+  const middleware = applyMiddleware(logger, thunk, promise());
 
   //create store
   const store = createStore(reducer, middleware);
 
   //pemanggilan action
-  store.dispatch(dispatch => {
-    dispatch({ type: 'FETCH_USERS_START' });
-    Axios.get('https://jsonplaceholder.typicode.com/users')
-      .then(res => {
-        dispatch({ type: 'RECEIVE_USERS', payload: res.data });
-      })
-      .catch(err => {
-        dispatch({ type: 'FETCH_USERS_ERROR', payload: err.data });
-      });
+  store.dispatch({
+    type: 'FETCH_USERS',
+    payload: Axios.get('https://jsonplaceholder.typicode.com/users')
   });
 
   //component mana saja yag berlangganan
