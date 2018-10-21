@@ -1,8 +1,12 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import reduxStore from './redux/store';
 
 class App extends Component {
+  componentDidMount() {
+    reduxStore();
+  }
   render() {
     return (
       <div className="App">
@@ -15,8 +19,7 @@ class App extends Component {
             className="App-link"
             href="https://reactjs.org"
             target="_blank"
-            rel="noopener noreferrer"
-          >
+            rel="noopener noreferrer">
             Learn React
           </a>
         </header>
